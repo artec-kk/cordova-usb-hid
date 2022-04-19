@@ -32,6 +32,16 @@ import android.util.Log;
 public class UsbHid extends CordovaPlugin {
     private final String TAG = UsbHid.class.getSimpleName();
 
+    /** GET_REPORT request code */
+    private final int REQUEST_GET_REPORT = 0x01;
+    /** SET_REPORT request code */
+    private final int REQUEST_SET_REPORT = 0x09;
+    /** INPUT report type */
+    private final int REPORT_TYPE_INPUT = 0x0100;
+    /** OUTPUT report type */
+    private final int REPORT_TYPE_OUTPUT = 0x0200;
+
+
     private USBThreadDataReceiver usbThreadDataReceiver;
 
     private UsbManager manager;
@@ -83,6 +93,11 @@ public class UsbHid extends CordovaPlugin {
             JSONObject opts = arg_object.has("opts")? arg_object.getJSONObject("opts") : new JSONObject();
 
             this.writeReadHex(opts,callbackContext);
+            return true;
+        } else if (action.equals("getFeatureReport")) {
+            JSONObject opts = arg_object.has("opts")? arg_object.getJSONObject("opts") : new JSONObject();
+
+            this.getFeatureReport(opts,callbackContext);
             return true;
         }
 
@@ -367,9 +382,42 @@ public class UsbHid extends CordovaPlugin {
                 catch (Exception e) {
                     callbackContext.error("Error writing and reading: "+e.getMessage());
                 }
+            }
+        });
+    }
 
+    private void getFeatureReport(final JSONObject opts, final CallbackContext callbackContext) {
+        cordova.getThreadPool().execute(new Runnable() {
+            public void run() {
+                UsbInterface intf = device.getInterface(0);
 
+                try {
+                    int reportId = 0;
+                    int localPacketsize = packetSize;
+                    if (opts.has("reportId"))
+                        reportId = opts.getInt("reportId");
+                    if (opts.has("packetsize"))
+                        localPacketsize = opts.getInt("packetsize");
+                    int localTimeout = readTimeout;
+                    if (opts.has("readTimeout"))
+                        localTimeout = opts.getInt("readTimeout");
 
+                    byte[] buffer = new byte[localPacketsize];
+                    connection.controlTransfer(
+                            UsbConstants.USB_DIR_IN | UsbConstants.USB_TYPE_CLASS
+                                    | UsbConstants.USB_INTERFACE_SUBCLASS_BOOT,
+                            REQUEST_GET_REPORT,
+                            reportId | REPORT_TYPE_OUTPUT,
+                            intf.getId(), buffer, localPacketsize, 0);
+
+                    PluginResult result = new PluginResult(PluginResult.Status.OK, buffer);
+                    result.setKeepCallback(true);
+                    callbackContext.sendPluginResult(result);
+                } catch (Exception e) {
+                    // deal with error
+                    Log.d(TAG, e.getMessage());
+                    callbackContext.error(e.getMessage());
+                }
             }
         });
     }
