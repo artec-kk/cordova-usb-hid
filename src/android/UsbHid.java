@@ -183,7 +183,7 @@ public class UsbHid extends CordovaPlugin {
                     cordova.getActivity().registerReceiver(usbReceiver, filter);
                     // ask permission
                     manager.requestPermission(device, mPermissionIntent);
-                    callbackContext.success("Permisson given");
+                    // callbackContext.success("Permisson given");
                 } catch (Exception e) {
                     callbackContext.error("Can not get permission: "+e.getMessage());
                 }
