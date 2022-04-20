@@ -99,6 +99,11 @@ public class UsbHid extends CordovaPlugin {
 
             this.getFeatureReport(opts,callbackContext);
             return true;
+        } else if (action.equals("sendFeatureReport")) {
+            JSONObject opts = arg_object.has("opts")? arg_object.getJSONObject("opts") : new JSONObject();
+
+            this.sendFeatureReport(opts,callbackContext,true);
+            return true;
         }
 
         return false;
@@ -408,11 +413,51 @@ public class UsbHid extends CordovaPlugin {
                                     | UsbConstants.USB_INTERFACE_SUBCLASS_BOOT,
                             REQUEST_GET_REPORT,
                             reportId | REPORT_TYPE_OUTPUT,
-                            intf.getId(), buffer, localPacketsize, 0);
+                            intf.getId(), buffer, localPacketsize, localTimeout);
 
                     PluginResult result = new PluginResult(PluginResult.Status.OK, buffer);
                     result.setKeepCallback(true);
                     callbackContext.sendPluginResult(result);
+                } catch (Exception e) {
+                    // deal with error
+                    Log.d(TAG, e.getMessage());
+                    callbackContext.error(e.getMessage());
+                }
+            }
+        });
+    }
+
+    private void sendFeatureReport(final JSONObject opts, final CallbackContext callbackContext, boolean returnSucess) {
+        cordova.getThreadPool().execute(new Runnable() {
+            public void run() {
+                UsbInterface intf = device.getInterface(0);
+
+                try {
+                    String data = opts.getString("data");
+                    int reportId = 0;
+                    int localPacketsize = packetSize;
+                    if (opts.has("reportId"))
+                        reportId = opts.getInt("reportId");
+                    if (opts.has("packetsize"))
+                        localPacketsize = opts.getInt("packetsize");
+                    int localTimeout = writeTimeout;
+                    if (opts.has("writeTimeout"))
+                        localTimeout = opts.getInt("writeTimeout");
+
+                    byte[] buffer = hexStringToByteArray(data, localPacketsize);
+                    int result = connection.controlTransfer(
+                            UsbConstants.USB_DIR_OUT | UsbConstants.USB_TYPE_CLASS
+                                    | UsbConstants.USB_INTERFACE_SUBCLASS_BOOT,
+                            REQUEST_SET_REPORT,
+                            reportId | REPORT_TYPE_INPUT,
+                            intf.getId(), buffer, 8, localTimeout);
+
+                    if (result < 0) {
+                        callbackContext.error("Can not transfer data to the device.");
+                        return;
+                    } else if (returnSucess) {
+                        callbackContext.success(result + " bytes written.");
+                    }
                 } catch (Exception e) {
                     // deal with error
                     Log.d(TAG, e.getMessage());
