@@ -39,6 +39,16 @@ namespace cordova_usb_hid {
         readTimeout?: number;
         writeTimeout?: number;
     }         
+    export interface GetFeatureOptions {
+        reportId?: number;
+        packetsize?: number;
+        readTimeout?: number;
+    }
+    export interface SetFeatureOptions {
+        reportId?: number;
+        packetsize?: number;
+        writeTimeout?: number;
+    }
     /** @internal */   
     function buf2hex(buffer : ArrayBuffer) : string { // buffer is an ArrayBuffer
         return Array.prototype.map.call(new Uint8Array(buffer), x => ('00' + x.toString(16)).slice(-2)).join('');
@@ -140,6 +150,34 @@ namespace cordova_usb_hid {
                     'UsbHid',
                     'registerReadCallback',
                     []
+                );
+            });
+            
+        }
+        public getFeatureReport(opts? : GetFeatureOptions) : Promise<ArrayBuffer> {
+            return new Promise((successCallback,errorCallback)=>{
+                cordova.exec(
+                    successCallback,
+                    errorCallback,
+                    'UsbHid',
+                    'getFeatureReport',
+                    [{'opts': opts}]
+                );
+            });
+            
+        }
+        public setFeatureReport(data : ArrayBuffer, opts? : SetFeatureOptions) : Promise<void> {
+            var writeOpts : any=opts;
+            if (!writeOpts) writeOpts={};
+            
+            writeOpts.data=buf2hex(data);
+            return new Promise((successCallback,errorCallback)=>{
+                cordova.exec(
+                    successCallback,
+                    errorCallback,
+                    'UsbHid',
+                    'setFeatureReport',
+                    [{'opts': writeOpts}]
                 );
             });
             

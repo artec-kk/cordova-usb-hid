@@ -99,10 +99,10 @@ public class UsbHid extends CordovaPlugin {
 
             this.getFeatureReport(opts,callbackContext);
             return true;
-        } else if (action.equals("sendFeatureReport")) {
+        } else if (action.equals("setFeatureReport")) {
             JSONObject opts = arg_object.has("opts")? arg_object.getJSONObject("opts") : new JSONObject();
 
-            this.sendFeatureReport(opts,callbackContext,true);
+            this.setFeatureReport(opts,callbackContext,true);
             return true;
         }
 
@@ -431,7 +431,7 @@ public class UsbHid extends CordovaPlugin {
         });
     }
 
-    private void sendFeatureReport(final JSONObject opts, final CallbackContext callbackContext, boolean returnSucess) {
+    private void setFeatureReport(final JSONObject opts, final CallbackContext callbackContext, boolean returnSucess) {
         cordova.getThreadPool().execute(new Runnable() {
             public void run() {
                 UsbInterface intf = device.getInterface(0);
