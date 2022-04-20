@@ -408,16 +408,20 @@ public class UsbHid extends CordovaPlugin {
                         localTimeout = opts.getInt("readTimeout");
 
                     byte[] buffer = new byte[localPacketsize];
-                    connection.controlTransfer(
+                    int result = connection.controlTransfer(
                             UsbConstants.USB_DIR_IN | UsbConstants.USB_TYPE_CLASS
                                     | UsbConstants.USB_INTERFACE_SUBCLASS_BOOT,
                             REQUEST_GET_REPORT,
                             reportId | REPORT_TYPE_OUTPUT,
                             intf.getId(), buffer, localPacketsize, localTimeout);
 
-                    PluginResult result = new PluginResult(PluginResult.Status.OK, buffer);
-                    result.setKeepCallback(true);
-                    callbackContext.sendPluginResult(result);
+                    if (result > 0) {
+                        PluginResult pResult = new PluginResult(PluginResult.Status.OK, buffer);
+                        pResult.setKeepCallback(true);
+                        callbackContext.sendPluginResult(pResult);
+                    } else {
+                        callbackContext.error("read error " + result);
+                    }
                 } catch (Exception e) {
                     // deal with error
                     Log.d(TAG, e.getMessage());
@@ -450,7 +454,7 @@ public class UsbHid extends CordovaPlugin {
                                     | UsbConstants.USB_INTERFACE_SUBCLASS_BOOT,
                             REQUEST_SET_REPORT,
                             reportId | REPORT_TYPE_INPUT,
-                            intf.getId(), buffer, 8, localTimeout);
+                            intf.getId(), buffer, buffer.length, localTimeout);
 
                     if (result < 0) {
                         callbackContext.error("Can not transfer data to the device.");
