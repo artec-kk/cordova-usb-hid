@@ -267,7 +267,8 @@ public class UsbHid extends CordovaPlugin {
                     connection = null;
                     endPointRead=null;
                     endPointWrite=null;
-                    usbThreadDataReceiver.stopThis();
+                    if (usbThreadDataReceiver!=null)
+                        usbThreadDataReceiver.stopThis();
                     callbackContext.success();
                 }
                 catch (Exception e) {
@@ -398,22 +399,22 @@ public class UsbHid extends CordovaPlugin {
 
                 try {
                     int reportId = 0;
-                    int localPacketsize = packetSize;
+                    int localPacketSize = packetSize;
                     if (opts.has("reportId"))
                         reportId = opts.getInt("reportId");
-                    if (opts.has("packetsize"))
-                        localPacketsize = opts.getInt("packetsize");
+                    if (opts.has("packetSize"))
+                        localPacketSize = opts.getInt("packetSize");
                     int localTimeout = readTimeout;
                     if (opts.has("readTimeout"))
                         localTimeout = opts.getInt("readTimeout");
 
-                    byte[] buffer = new byte[localPacketsize];
+                    byte[] buffer = new byte[localPacketSize];
                     int result = connection.controlTransfer(
                             UsbConstants.USB_DIR_IN | UsbConstants.USB_TYPE_CLASS
                                     | UsbConstants.USB_INTERFACE_SUBCLASS_BOOT,
                             REQUEST_GET_REPORT,
                             reportId | REPORT_TYPE_OUTPUT,
-                            intf.getId(), buffer, localPacketsize, localTimeout);
+                            intf.getId(), buffer, localPacketSize, localTimeout);
 
                     if (result > 0) {
                         PluginResult pResult = new PluginResult(PluginResult.Status.OK, buffer);
@@ -439,16 +440,16 @@ public class UsbHid extends CordovaPlugin {
                 try {
                     String data = opts.getString("data");
                     int reportId = 0;
-                    int localPacketsize = packetSize;
+                    int localPacketSize = packetSize;
                     if (opts.has("reportId"))
                         reportId = opts.getInt("reportId");
-                    if (opts.has("packetsize"))
-                        localPacketsize = opts.getInt("packetsize");
+                    if (opts.has("packetSize"))
+                        localPacketSize = opts.getInt("packetSize");
                     int localTimeout = writeTimeout;
                     if (opts.has("writeTimeout"))
                         localTimeout = opts.getInt("writeTimeout");
 
-                    byte[] buffer = hexStringToByteArray(data, localPacketsize);
+                    byte[] buffer = hexStringToByteArray(data, localPacketSize);
                     int result = connection.controlTransfer(
                             UsbConstants.USB_DIR_OUT | UsbConstants.USB_TYPE_CLASS
                                     | UsbConstants.USB_INTERFACE_SUBCLASS_BOOT,
