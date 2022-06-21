@@ -122,7 +122,6 @@ public class UsbHid extends CordovaPlugin {
                         addProperty(obj, "vendorId", usbDevice.getVendorId());
                         addProperty(obj, "productId", usbDevice.getProductId());
                         if (Build.VERSION.SDK_INT>21 ) {
-                            addProperty(obj, "serialNumber", usbDevice.getSerialNumber());
                             addProperty(obj, "productName", usbDevice.getProductName());
                         }
 
